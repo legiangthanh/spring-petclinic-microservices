@@ -1,0 +1,64 @@
+pipeline {
+    agent any
+    environment {
+        SONAR_PROJECT_KEY = 'spring-petclinic-microservices'
+        SONAR_HOST_URL = 'http://sonarqube:9000'
+        SONAR_TOKEN = credentials('SONAR_TOKEN_ID')
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        stage('Build') {
+            steps {
+                sh './mvnw clean install -DskipTests'
+            }
+        }
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh "./mvnw sonar:sonar -Dsonar.projectKey=${SONAR_PROJECT_KEY} -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_TOKEN}"
+                }
+            }
+        }
+
+        stage('Snyk Scan') {
+            steps {
+                withCredentials([string(credentialsId: 'SNYK_TOKEN', variable: 'SNYK_TOKEN')]) {
+                    sh 'snyk auth $SNYK_TOKEN'
+                    sh 'snyk test --all-projects'
+                }
+            }
+        }
+
+        stage('OWASP ZAP Baseline Scan') {
+    steps {
+        sh '''
+            echo "=== Before scan ==="
+            ls -la
+            
+            docker run --rm --user 0 --network spring-petclinic-microservices_default \
+                -v $PWD:/zap/wrk:rw -t zaproxy/zap-stable zap-baseline.py \
+                -t http://api-gateway:8080 \
+                -r zap-report.html \
+                -I
+            
+            echo "=== After scan ==="
+            ls -la
+            
+            if [ -f zap-report.html ]; then
+                echo "Report found!"
+                cat zap-report.html | head -20
+            else
+                echo "Report NOT found!"
+            fi
+        '''
+        
+        archiveArtifacts artifacts: 'zap-report.html', allowEmptyArchive: true
+    }
+}
+        // Thêm các stage khác nếu cần
+    }
+}

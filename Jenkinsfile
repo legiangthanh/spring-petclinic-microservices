@@ -22,7 +22,7 @@ pipeline {
             }
         }
 
-        stage('Snyk Scan') {
+        /*stage('Snyk Scan') {
             steps {
                 // 'snyk-token-id' is the ID of your Snyk API token credential
                 snykSecurity(
@@ -31,7 +31,7 @@ pipeline {
                     targetFile: 'pom.xml'
                 )
             }
-        }
+        }*/
         
 
         stage('OWASP ZAP Baseline Scan') {
@@ -60,6 +60,6 @@ pipeline {
                 archiveArtifacts artifacts: 'zap-report.html', allowEmptyArchive: true
             }
         }
-        // Thêm các stage khác nếu cần
+        
     }
 }

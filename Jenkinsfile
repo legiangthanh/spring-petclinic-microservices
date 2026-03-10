@@ -22,7 +22,7 @@ pipeline {
             }
         }
 
-        /*stage('Snyk Scan') {
+        stage('Snyk Scan') {
             steps {
                 // 'snyk-token-id' is the ID of your Snyk API token credential
                 snykSecurity(
@@ -31,16 +31,16 @@ pipeline {
                     targetFile: 'pom.xml'
                 )
             }
-        }*/
+        }
         
 
-        stage('OWASP ZAP Baseline Scan') {
+        /*stage('OWASP ZAP Baseline Scan') {
             steps {
                 sh '''
                     echo "=== Before scan ==="
                     ls -la
                     
-                    docker run --rm --user 0 --network spring-petclinic-microservices_default \
+                    docker run --rm --user 0 --network sourcecode_default \
                         -v $PWD:/zap/wrk:rw -t zaproxy/zap-stable zap-baseline.py \
                         -t http://api-gateway:8080 \
                         -r zap-report.html \
@@ -59,7 +59,7 @@ pipeline {
                 
                 archiveArtifacts artifacts: 'zap-report.html', allowEmptyArchive: true
             }
-        }
+        }*/
         
     }
 }
